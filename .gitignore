@@ -1,0 +1,9 @@
+# Created by .ignore support plugin (hsz.mobi)
+
+*.pyc
+*.txt
+
+.idea
+*.iml
+out
+gen
