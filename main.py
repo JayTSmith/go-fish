@@ -9,6 +9,7 @@ import sys
 from fish_lib.game import BasicGoFish
 from fish_lib.players import TryingPlayer
 
+
 def build_players():
     return [TryingPlayer() for _ in range(6)]
 
@@ -23,7 +24,6 @@ def stat_run():
 
     for k in win_count:
         print(k, win_count[k])
-                
 
 
 def main():
@@ -72,5 +72,4 @@ if __name__ == '__main__':
     if '-p' in sys.argv:
         prof_main()
     else:
-        #main()
-        stat_run()
+        main()
