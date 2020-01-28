@@ -94,7 +94,7 @@ class BasicGoFish(BaseGame):
             self.active_player_idx = (self.active_player_idx + 1) % len(self.players)
             return
 
-        valid_players = list(filter(lambda p: p.playing, self.players))
+        valid_players = [p for p in self.players if p.playing]
 
         # We pass the players in case the Player is keeping tracking of that.
         # requested face and requested player.
