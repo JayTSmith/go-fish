@@ -11,7 +11,7 @@ from fish_lib.players import TryingPlayer
 
 
 def build_players():
-    return [TryingPlayer() for _ in range(6)]
+    return [TryingPlayer(name=f'{i+1}') for i in range(6)]
 
 
 def stat_run():
