@@ -5,9 +5,7 @@ Author: Justin Smith
 Date: 1/23/18
 """
 import itertools
-from random import choice, randint
-
-from . import players
+from random import randint, shuffle
 
 RANKS = ('2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace')
 SUITS = ('Spades', 'Clubs', 'Hearts', 'Diamond')
@@ -42,15 +40,9 @@ class BasicGoFish(BaseGame):
 
     def __init__(self, players: list):
         self.deck = list(BASE_DECK)
-        self.shuffle_deck()
 
         self.active_player_idx = 0
         self.players = players
-
-        card_count = 5 if len(players) > 4 else 7
-        for player in self.players:
-            player.hand = self.deck[:card_count]
-            self.deck = self.deck[card_count:]
 
     @staticmethod
     def card_to_string(card):
@@ -67,7 +59,11 @@ class BasicGoFish(BaseGame):
         Checks if a certain player has a book. If one is found,
         then it is removed from the player's hand and added to their book list.
         """
-        for book in filter(lambda f: player.count_copies(f) == 4, RANKS):
+        rank_count = {}
+        for card in player.hand:
+            rank_count[card[0]] = rank_count.get(card[0], 0) + 1
+
+        for book in filter(lambda r: rank_count[r] == 4, rank_count):
             for card in itertools.product((book,), SUITS):
                 player.hand.remove(card)
             player.books.append(book)
@@ -91,6 +87,7 @@ class BasicGoFish(BaseGame):
             active_player.playing = self.draw_card(active_player)
 
         if not active_player.playing:
+            print(f'Player {active_player.name} is out!')
             self.active_player_idx = (self.active_player_idx + 1) % len(self.players)
             return
 
@@ -116,26 +113,28 @@ class BasicGoFish(BaseGame):
                                                                       r_face,
                                                                       active_player.count_copies(r_face)))
             active_player.hand.extend(won_cards)
+
+            # To speed up the game, let's just mark if they can continue playing here.
+            if not self.deck:
+                if not r_player.hand:
+                    r_player.playing = False
+                    print(f'Player {r_player.name} is out!')
+                if not active_player.hand:
+                    active_player.playing = False
+                    print(f'Player {active_player.name} is out!')
         else:  # If won cards is empty, then we 'go fish.'
             print('Player {} didn\'t have a {}.'.format(r_player.name, r_face))
             self.draw_card(active_player)
 
+        # Check for books
+        # We check here since the active player can draw into a book or start with one.
+        self.check_player_for_book(active_player)
+
         # Increment active player index to the next valid player according to the list.
         # This list isn't always going to be right since we have to check books
         # right after but it's closer than the alternative.
-        val_idx = valid_players.index(active_player) + 1
-        if val_idx == len(valid_players):
-            val_idx = 0
+        val_idx = (valid_players.index(active_player) + 1) % len(valid_players)
         self.active_player_idx = self.players.index(valid_players[val_idx])
-
-
-        # Check for books
-        self.check_player_for_book(active_player)
-
-        # To speed up the game, let's just mark if they can continue playing here.
-        if not self.deck:
-            r_player.playing = bool(r_player.hand)
-            active_player.playing = bool(active_player.hand)
 
     def do_full_round(self):
         """
@@ -147,6 +146,7 @@ class BasicGoFish(BaseGame):
         :return: the winning player obj
         """
         iterations = 0
+        self.setup_game()
         while not self.done and iterations < 100000:
             print('\nTurn {}\n{}'.format(iterations + 1,
                                          '-' * 15))
@@ -176,6 +176,16 @@ class BasicGoFish(BaseGame):
                 i += 1
             return True
         return False
+
+    def setup_game(self):
+        shuffle(self.deck)
+        self.active_player_idx = 0
+
+        card_count = 5 if len(self.players) > 4 else 7
+        for player in self.players:
+            player.playing = True
+            player.hand = self.deck[:card_count]
+            self.deck = self.deck[card_count:]
 
     def shuffle_deck(self):
         """
