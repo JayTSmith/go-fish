@@ -54,6 +54,7 @@ def prof_main():
     prof = Profile()
     prof.enable()
     fish = BasicGoFish(build_players())
+    fish.do_full_round()
     prof.disable()
 
     line_sep_char = '#'
